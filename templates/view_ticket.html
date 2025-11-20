@@ -3,7 +3,7 @@
 
 <div class="container py-4">
 
-  <!-- 🔙 Back Button -->
+  <!-- Back Button -->
   <div class="mb-3">
     <a href="{{ url_for('admin_dashboard') if current_user.role == 'admin' else url_for('staff_dashboard') }}"
        class="btn btn-outline-secondary btn-sm">
@@ -11,7 +11,7 @@
     </a>
   </div>
 
-  <!-- 🎟 Ticket Details Card -->
+  <!-- Ticket Details Card -->
   <div class="card shadow-sm border-0 rounded-4 mb-4">
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center mb-3">
@@ -37,6 +37,7 @@
               {{ ticket.priority }}
             </span>
           </p>
+          <p><strong>Assigned To:</strong> {{ ticket.assigned_to or 'Unassigned' }}</p>
         </div>
         <div class="col-md-6">
           <p><strong>Created By:</strong> {{ ticket.staff.username }}</p>
@@ -64,7 +65,7 @@
     </div>
   </div>
 
-  <!-- 🧑‍💼 Staff Actions -->
+  <!-- Staff Actions -->
   {% if current_user.role == 'staff' %}
   <div class="card shadow-sm border-0 rounded-4 mb-4">
     <div class="card-body">
@@ -85,7 +86,7 @@
   </div>
   {% endif %}
 
-  <!-- 🧩 Admin Controls -->
+  <!-- Admin Controls -->
   {% if current_user.role == 'admin' %}
   <div class="card shadow-sm border-0 rounded-4 mb-4">
     <div class="card-body">
@@ -98,6 +99,9 @@
             <option value="Solved" {% if ticket.status == 'Solved' %}selected{% endif %}>Solved</option>
           </select>
         </div>
+        <div class="col-md-4">
+          <input type="text" name="assigned_to" class="form-control" value="{{ ticket.assigned_to or '' }}" placeholder="Assign to...">
+        </div>
         <div class="col-md-3">
           <button class="btn btn-primary w-100">
             <i class="bi bi-save me-1"></i> Save
@@ -108,7 +112,7 @@
   </div>
   {% endif %}
 
-  <!-- 💬 Comments Section -->
+  <!-- Comments Section -->
   <div class="card shadow-sm border-0 rounded-4">
     <div class="card-body">
       <h5 class="fw-bold mb-4 text-primary">Comments</h5>
@@ -133,7 +137,7 @@
         <p class="text-muted">No comments yet.</p>
       {% endif %}
 
-      <!-- ➕ Add Comment -->
+      <!-- Add Comment -->
       <form method="post" action="{{ url_for('add_comment', ticket_id=ticket.id) }}" class="mt-3">
         <div class="mb-3">
           <textarea name="message" rows="3" class="form-control" placeholder="Add a comment..." required></textarea>
