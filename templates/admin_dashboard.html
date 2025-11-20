@@ -130,7 +130,7 @@
           <form method="post" action="{{ url_for('admin_update_assigned', ticket_id=t.id) }}" class="d-flex">
             <input type="text" name="assigned_to" class="form-control form-control-sm me-2"
               value="{{ t.assigned_to or '' }}" placeholder="Unassigned">
-            <button class="btn btn-sm btn-secondary">Save</button>
+            <button class="btn btn-sm btn-primary">Save</button>
           </form>
         </td>
         <!-- Status Update Column -->
