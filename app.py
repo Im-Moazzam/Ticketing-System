@@ -514,6 +514,22 @@ def create_app():
             flash("Invalid action for current status.", "danger")
 
         return redirect(url_for("view_ticket", ticket_id=ticket.id))
+    
+    @app.route("/admin/ticket/<int:ticket_id>/assign", methods=["POST"])
+    @login_required
+    def admin_update_assigned(ticket_id):
+        if current_user.role != "admin":
+            flash("Not authorized.", "danger")
+            return redirect(url_for("index"))
+
+        ticket = Ticket.query.get_or_404(ticket_id)
+        assigned_to = request.form.get("assigned_to", "").strip()
+
+        ticket.assigned_to = assigned_to
+        db.session.commit()
+
+        flash(f"Ticket #{ticket.id} assigned to '{assigned_to}'.", "success")
+        return redirect(url_for("admin_dashboard", status=request.args.get("status", "All")))
 
     # ---------- CLI: init-db ----------
 
