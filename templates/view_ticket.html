@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-4">
+
+  <!-- 🔙 Back Button -->
+  <div class="mb-3">
+    <a href="{{ url_for('admin_dashboard') if current_user.role == 'admin' else url_for('staff_dashboard') }}"
+       class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left"></i> Back
+    </a>
+  </div>
+
+  <!-- 🎟 Ticket Details Card -->
+  <div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold mb-0 text-primary">Ticket #{{ ticket.id }}</h4>
+        <span class="badge 
+          {% if ticket.status == 'Open' %}bg-danger
+          {% elif ticket.status == 'In Progress' %}bg-warning text-dark
+          {% elif ticket.status == 'Solved' %}bg-info
+          {% elif ticket.status == 'Closed' %}bg-success{% endif %}">
+          {{ ticket.status }}
+        </span>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <p><strong>Practice:</strong> {{ ticket.practice_name }}</p>
+          <p><strong>Provider:</strong> {{ ticket.provider_name }}</p>
+          <p><strong>Priority:</strong>
+            <span class="badge 
+              {% if ticket.priority == 'Urgent' %}bg-danger
+              {% elif ticket.priority == '7 Days' %}bg-warning text-dark
+              {% else %}bg-info{% endif %}">
+              {{ ticket.priority }}
+            </span>
+          </p>
+        </div>
+        <div class="col-md-6">
+          <p><strong>Created By:</strong> {{ ticket.staff.username }}</p>
+          <p><strong>Created At:</strong> {{ ticket.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+          <p><strong>Due Time:</strong> {{ ticket.due_time.strftime('%Y-%m-%d %H:%M') }}</p>
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <p class="fw-bold mb-1">Subject:</p>
+        <p class="fs-6">{{ ticket.subject }}</p>
+
+        <p class="fw-bold mb-1">Description:</p>
+        <p class="text-muted">{{ ticket.description }}</p>
+
+        {% if ticket.attachment_filename %}
+        <p class="mb-0">
+          <strong>Attachment:</strong>
+          <a href="{{ url_for('download_attachment', ticket_id=ticket.id) }}" class="btn btn-link">
+            <i class="bi bi-paperclip"></i> {{ ticket.attachment_filename }}
+          </a>
+        </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- 🧑‍💼 Staff Actions -->
+  {% if current_user.role == 'staff' %}
+  <div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-body">
+      <h5 class="fw-bold mb-3 text-primary">Your Actions</h5>
+      <form method="post" action="{{ url_for('staff_action', ticket_id=ticket.id) }}" class="d-flex flex-wrap gap-2">
+        {% if ticket.status in ['Solved', 'In Progress', 'Open'] %}
+          <button type="submit" name="action" value="approve_close" class="btn btn-success">
+            <i class="bi bi-check-circle"></i> Approve & Close
+          </button>
+        {% endif %}
+        {% if ticket.status in ['Solved', 'Closed'] %}
+          <button type="submit" name="action" value="reopen" class="btn btn-warning text-dark">
+            <i class="bi bi-arrow-repeat"></i> Reopen
+          </button>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 🧩 Admin Controls -->
+  {% if current_user.role == 'admin' %}
+  <div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-body">
+      <h5 class="fw-bold mb-3 text-primary">Admin Controls</h5>
+      <form method="post" action="{{ url_for('admin_update_status', ticket_id=ticket.id) }}" class="row g-3 align-items-center">
+        <div class="col-md-4">
+          <select name="status" class="form-select">
+            <option value="Open" {% if ticket.status == 'Open' %}selected{% endif %}>Open</option>
+            <option value="In Progress" {% if ticket.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+            <option value="Solved" {% if ticket.status == 'Solved' %}selected{% endif %}>Solved</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <button class="btn btn-primary w-100">
+            <i class="bi bi-save me-1"></i> Save
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 💬 Comments Section -->
+  <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body">
+      <h5 class="fw-bold mb-4 text-primary">Comments</h5>
+
+      {% if ticket.comments %}
+        {% for c in ticket.comments %}
+        <div class="border rounded-3 p-3 mb-3 
+                    {% if c.user.role == 'admin' %}bg-light{% else %}bg-info bg-opacity-10{% endif %}">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <div>
+              <strong>{{ c.user.username }}</strong>
+              <span class="badge {% if c.user.role == 'admin' %}bg-secondary{% else %}bg-info text-dark{% endif %} small ms-2">
+                {{ c.user.role|capitalize }}
+              </span>
+            </div>
+            <small class="text-muted">{{ c.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+          </div>
+          <p class="mb-0 text-muted">{{ c.message }}</p>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted">No comments yet.</p>
+      {% endif %}
+
+      <!-- ➕ Add Comment -->
+      <form method="post" action="{{ url_for('add_comment', ticket_id=ticket.id) }}" class="mt-3">
+        <div class="mb-3">
+          <textarea name="message" rows="3" class="form-control" placeholder="Add a comment..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-chat-dots-fill me-1"></i> Post Comment
+        </button>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

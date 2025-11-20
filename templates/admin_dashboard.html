@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3 class="mb-4">Credentialing Team Dashboard</h3>
+
+<!-- ===== Summary Cards ===== -->
+<div class="row mb-4 text-center">
+  <div class="col-md-4 mb-3">
+    <div class="card shadow-sm border-0 rounded-3 h-100 summary-animate">
+      <div class="card-body">
+        <div class="d-flex justify-content-center align-items-center">
+          <i class="bi bi-collection text-primary fs-3 me-3"></i>
+          <div>
+            <h6 class="text-muted mb-1">Total Tickets</h6>
+            <h4 class="fw-bold text-primary mb-0">{{ total_tickets }}</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4 mb-3">
+    <div class="card shadow-sm border-0 rounded-3 h-100 summary-animate">
+      <div class="card-body">
+        <div class="d-flex justify-content-center align-items-center">
+          <i class="bi bi-check-circle-fill text-success fs-3 me-3"></i>
+          <div>
+            <h6 class="text-muted mb-1">Closed (Approved)</h6>
+            <h4 class="fw-bold text-success mb-0">{{ closed_tickets }}</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4 mb-3">
+    <div class="card shadow-sm border-0 rounded-3 h-100 summary-animate">
+      <div class="card-body">
+        <div class="d-flex justify-content-center align-items-center">
+          <i class="bi bi-alarm-fill text-danger fs-3 me-3"></i>
+          <div>
+            <h6 class="text-muted mb-1">Delayed / Overdue</h6>
+            <h4 class="fw-bold text-danger mb-0">{{ overdue_tickets }}</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Filter ===== -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <form method="get" class="d-inline">
+      <label for="statusFilter" class="form-label me-2 fw-bold">Filter by Status:</label>
+      <select name="status" id="statusFilter" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+        <option value="All" {% if selected_status == 'All' %}selected{% endif %}>All</option>
+        <option value="Open" {% if selected_status == 'Open' %}selected{% endif %}>Open</option>
+        <option value="In Progress" {% if selected_status == 'In Progress' %}selected{% endif %}>In Progress</option>
+        <option value="Solved" {% if selected_status == 'Solved' %}selected{% endif %}>Solved</option>
+        <option value="Closed" {% if selected_status == 'Closed' %}selected{% endif %}>Closed</option>
+      </select>
+    </form>
+  </div>
+</div>
+
+<!-- ===== Tickets Table ===== -->
+<div class="card shadow-sm p-3">
+  <table class="table table-hover align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>ID</th>
+        <th>Practice</th>
+        <th>Provider</th>
+        <th>Subject</th>
+        <th>Priority</th>
+        <th>Status</th>
+        <th>Due Time</th>
+        <th>Created By</th>
+        <th>Created At</th>
+        <th>Update</th>
+        <th>Action</th>
+        <th>Assigned To</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in tickets %}
+      {% set overdue = now > t.due_time %}
+      {% set time_diff = (t.due_time - now).total_seconds() %}
+      {% set hours = (time_diff // 3600) | int %}
+      {% set minutes = ((time_diff % 3600) // 60) | int %}
+      <tr class="{% if overdue %}table-danger{% endif %}">
+        <td>#{{ t.id }}</td>
+        <td>{{ t.practice_name }}</td>
+        <td>{{ t.provider_name }}</td>
+        <td>{{ t.subject }}</td>
+        <td>
+          <span class="badge {% if t.priority == 'Urgent' %}bg-danger{% elif t.priority == '7 Days' %}bg-warning text-dark{% else %}bg-info{% endif %}">
+            {{ t.priority }}
+          </span>
+        </td>
+        <td>
+          <span class="badge {% if t.status == 'Open' %}bg-danger{% elif t.status == 'In Progress' %}bg-warning text-dark{% elif t.status == 'Solved' %}bg-info{% elif t.status == 'Closed' %}bg-success{% endif %}">
+            {{ t.status }}
+          </span>
+        </td>
+        <td>
+          {% if overdue %}
+            <div class="text-danger fw-bold">
+              {{ t.due_time.strftime('%Y-%m-%d %H:%M') }}
+              <span class="badge bg-danger ms-2">
+                Expired {{ ((-time_diff)//3600)|int }}h {{ ((-time_diff)%3600//60)|int }}m ago
+              </span>
+            </div>
+          {% else %}
+            <div class="text-success fw-bold">
+              {{ t.due_time.strftime('%Y-%m-%d %H:%M') }}
+              <span class="badge bg-success ms-2">
+                {{ hours }}h {{ minutes }}m left
+              </span>
+            </div>
+          {% endif %}
+        </td>
+        <td>{{ t.staff.username }}</td>
+        <td>{{ t.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        <td>
+          <form method="post" action="{{ url_for('admin_update_status', ticket_id=t.id) }}" class="d-flex align-items-center">
+            <select name="status" class="form-select form-select-sm me-2">
+              <option value="Open" {% if t.status == 'Open' %}selected{% endif %}>Open</option>
+              <option value="In Progress" {% if t.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+              <option value="Solved" {% if t.status == 'Solved' %}selected{% endif %}>Solved</option>
+            </select>
+            <button class="btn btn-sm btn-primary">Save</button>
+          </form>
+        </td>
+        <td>
+          <a href="{{ url_for('view_ticket', ticket_id=t.id) }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-eye"></i> View
+          </a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="11" class="text-center text-muted">No tickets found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="mb-3">Create New Ticket</h3>
+<form method="post" enctype="multipart/form-data">
+  <div class="mb-3">
+    <label class="form-label">Practice Name</label>
+    <input name="practice_name" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Provider Name</label>
+    <input name="provider_name" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Subject</label>
+    <input name="subject" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Query / Description</label>
+    <textarea name="description" rows="4" class="form-control" required></textarea>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Priority / SLA</label>
+    <select name="priority" class="form-select" required>
+      <option value="">-- Select Priority --</option>
+      <option value="Urgent">Urgent (resolve within 2 hours)</option>
+      <option value="7 Days">Need to solve in 7 days</option>
+      <option value="15 Days">Need to solve in 15 days</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Attachment (optional)</label>
+    <input type="file" name="attachment" class="form-control">
+  </div>
+  <button class="btn btn-success">Submit Ticket</button>
+</form>
+{% endblock %}
